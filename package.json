@@ -1,0 +1,19 @@
+{
+  "name": "boiler",
+  "version": "1.0.0",
+  "description": "",
+  "main": "createBoilerplate.mjs",
+  "type": "module",
+  "bin": {
+    "create-boilerplate": "./createBoilerplate.mjs"
+  },
+  "dependencies": {
+    "inquirer": "^7.3.3"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC"
+}

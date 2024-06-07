@@ -37,6 +37,11 @@ async function createBoilerplate(targetDir) {
             type: 'input',
             name: 'viewsFiles',
             message: 'Enter the names of files to create in the views directory (comma separated):'
+        },
+        {
+            type: 'input',
+            name: 'partialsFiles',
+            message: 'Enter the names of files to create in the views/partials directory (comma separated):'
         }
     ]);
 
@@ -46,6 +51,7 @@ async function createBoilerplate(targetDir) {
     const dataFiles = answers.dataFiles.split(',').map(file => file.trim());
     const publicFiles = answers.publicFiles.split(',').map(file => file.trim());
     const viewsFiles = answers.viewsFiles.split(',').map(file => file.trim());
+    const partialsFiles = answers.partialsFiles.split(',').map(file => file.trim());
 
     const projectPath = path.join(targetDir, projectName);
 
@@ -70,6 +76,9 @@ async function createBoilerplate(targetDir) {
     });
     viewsFiles.forEach(file => {
         if (file) fs.writeFileSync(path.join(projectPath, 'views', file), fileContents[file] || '');
+    });
+    partialsFiles.forEach(file => {
+        if (file) fs.writeFileSync(path.join(projectPath, 'views/partials', file), fileContents[`partials/${file}`] || '');
     });
 
     // Create index.js file in the root directory with content from JSON

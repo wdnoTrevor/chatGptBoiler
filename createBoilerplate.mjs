@@ -59,7 +59,7 @@ async function createBoilerplate(targetDir) {
     fs.mkdirSync(projectPath, { recursive: true });
 
     // Create subdirectories
-    const directories = ['data', 'public', 'views', 'views/partials'];
+    const directories = ['data', 'public', 'public/js', 'public/css', 'views', 'views/partials'];
     directories.forEach(dir => {
         fs.mkdirSync(path.join(projectPath, dir), { recursive: true });
     });

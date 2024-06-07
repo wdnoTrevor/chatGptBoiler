@@ -30,8 +30,13 @@ async function createBoilerplate(targetDir) {
         },
         {
             type: 'input',
-            name: 'publicFiles',
-            message: 'Enter the names of files to create in the public directory (comma separated):'
+            name: 'jsFiles',
+            message: 'Enter the names of files to create in the public/js directory (comma separated):'
+        },
+        {
+            type: 'input',
+            name: 'cssFiles',
+            message: 'Enter the names of files to create in the public/css directory (comma separated):'
         },
         {
             type: 'input',
@@ -49,7 +54,8 @@ async function createBoilerplate(targetDir) {
     const npmPackages = answers.npmPackages.split(',').map(pkg => pkg.trim());
     const rootFiles = answers.rootFiles.split(',').map(file => file.trim());
     const dataFiles = answers.dataFiles.split(',').map(file => file.trim());
-    const publicFiles = answers.publicFiles.split(',').map(file => file.trim());
+    const jsFiles = answers.jsFiles.split(',').map(file => file.trim());
+    const cssFiles = answers.cssFiles.split(',').map(file => file.trim());
     const viewsFiles = answers.viewsFiles.split(',').map(file => file.trim());
     const partialsFiles = answers.partialsFiles.split(',').map(file => file.trim());
 
@@ -64,22 +70,52 @@ async function createBoilerplate(targetDir) {
         fs.mkdirSync(path.join(projectPath, dir), { recursive: true });
     });
 
-    // Create specified files in the respective directories
-    rootFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, file), fileContents[file] || '');
-    });
-    dataFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'data', file), fileContents[file] || '');
-    });
-    publicFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'public', file), fileContents[file] || '');
-    });
-    viewsFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'views', file), fileContents[file] || '');
-    });
-    partialsFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'views/partials', file), fileContents[`partials/${file}`] || '');
-    });
+    // Normalize and validate file names
+    const normalizeFiles = (files, extension, directory) => {
+        return files.map(file => {
+            // Ensure file has the correct extension
+            if (!file.endsWith(extension)) {
+                // Correct the extension if it's placed in the wrong directory
+                if (extension === '.js' && file.endsWith('.css')) {
+                    file = file.replace('.css', extension);
+                } else if (extension === '.css' && file.endsWith('.js')) {
+                    file = file.replace('.js', extension);
+                } else {
+                    file += extension;
+                }
+            }
+            return file;
+        });
+    };
+
+    // Normalize and validate js and css files
+    try {
+        const normalizedJsFiles = normalizeFiles(jsFiles, '.js', 'js');
+        const normalizedCssFiles = normalizeFiles(cssFiles, '.css', 'css');
+
+        // Create specified files in the respective directories
+        rootFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, file), fileContents[file] || '');
+        });
+        dataFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'data', file), fileContents[file] || '');
+        });
+        normalizedJsFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'public/js', file), fileContents[`public/js/${file}`] || '');
+        });
+        normalizedCssFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'public/css', file), fileContents[`public/css/${file}`] || '');
+        });
+        viewsFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'views', file), fileContents[file] || '');
+        });
+        partialsFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'views/partials', file), fileContents[`partials/${file}`] || '');
+        });
+    } catch (error) {
+        console.error(error.message);
+        return;
+    }
 
     // Create index.js file in the root directory with content from JSON
     fs.writeFileSync(path.join(projectPath, 'index.js'), fileContents['index.js']);

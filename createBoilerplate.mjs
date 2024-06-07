@@ -4,6 +4,7 @@ import fs from 'fs';
 import path from 'path';
 import { exec } from 'child_process';
 import inquirer from 'inquirer';
+import fileContents from './data.json' assert { type: 'json' };
 
 async function createBoilerplate(targetDir) {
     const answers = await inquirer.prompt([
@@ -59,33 +60,20 @@ async function createBoilerplate(targetDir) {
 
     // Create specified files in the respective directories
     rootFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, file), '');
+        if (file) fs.writeFileSync(path.join(projectPath, file), fileContents[file] || '');
     });
     dataFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'data', file), '');
+        if (file) fs.writeFileSync(path.join(projectPath, 'data', file), fileContents[file] || '');
     });
     publicFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'public', file), '');
+        if (file) fs.writeFileSync(path.join(projectPath, 'public', file), fileContents[file] || '');
     });
     viewsFiles.forEach(file => {
-        if (file) fs.writeFileSync(path.join(projectPath, 'views', file), '');
+        if (file) fs.writeFileSync(path.join(projectPath, 'views', file), fileContents[file] || '');
     });
 
-    // Initial content for index.js
-    let indexContent = `const express = require('express');
-const app = express();
-const port = process.env.PORT || 3000;
-
-app.get('/', (req, res) => {
-    res.send('Hello, world!');
-});
-
-app.listen(port, () => {
-    console.log(\`Server is running on port \${port}\`);
-});`;
-
-    // Write initial content to index.js
-    fs.writeFileSync(path.join(projectPath, 'index.js'), indexContent);
+    // Create index.js file in the root directory with content from JSON
+    fs.writeFileSync(path.join(projectPath, 'index.js'), fileContents['index.js']);
 
     // Change the current working directory to the project directory
     process.chdir(projectPath);
@@ -109,7 +97,7 @@ app.listen(port, () => {
                 // Add require statements for the installed packages in index.js
                 const additionalPackages = npmPackages.filter(pkg => pkg !== 'express');
                 const requireStatements = additionalPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
-                const updatedIndexContent = requireStatements + '\n' + indexContent;
+                const updatedIndexContent = requireStatements + '\n' + fileContents['index.js'];
                 fs.writeFileSync(path.join(projectPath, 'index.js'), updatedIndexContent);
             });
         }

@@ -1,0 +1,5 @@
+{
+    "index.js": "const express = require('express');\nconst app = express();\nconst port = process.env.PORT || 3000;\n\napp.get('/', (req, res) => {\n    res.send('Hello, world!');\n});\n\napp.listen(port, () => {\n    console.log(`Server is running on port ${port}`);\n});",
+    "home.ejs": "<!DOCTYPE html>\n<html lang=\"en\">\n<head>\n    <meta charset=\"UTF-8\">\n    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">\n    <title><%= title %></title>\n    <link rel=\"stylesheet\" href=\"/public/styles.css\">\n</head>\n<body>\n    <header>\n        <h1><%= header %></h1>\n    </header>\n    <main>\n        <p><%= message %></p>\n    </main>\n    <footer>\n        <p>&copy; <%= new Date().getFullYear() %> My Website</p>\n    </footer>\n</body>\n</html>"
+}
+  

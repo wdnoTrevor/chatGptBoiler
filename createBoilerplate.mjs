@@ -71,8 +71,8 @@ async function createBoilerplate(targetDir) {
         if (file) fs.writeFileSync(path.join(projectPath, 'views', file), '');
     });
 
-    // Create index.js file in the root directory with content
-    const indexContent = `const express = require('express');
+    // Initial content for index.js
+    let indexContent = `const express = require('express');
 const app = express();
 const port = process.env.PORT || 3000;
 
@@ -84,6 +84,7 @@ app.listen(port, () => {
     console.log(\`Server is running on port \${port}\`);
 });`;
 
+    // Write initial content to index.js
     fs.writeFileSync(path.join(projectPath, 'index.js'), indexContent);
 
     // Change the current working directory to the project directory
@@ -106,13 +107,11 @@ app.listen(port, () => {
                 console.log(installStdout);
 
                 // Add require statements for the installed packages in index.js
-                const requireStatements = npmPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
-                const updatedIndexContent = requireStatements + indexContent;
+                const additionalPackages = npmPackages.filter(pkg => pkg !== 'express');
+                const requireStatements = additionalPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
+                const updatedIndexContent = requireStatements + '\n' + indexContent;
                 fs.writeFileSync(path.join(projectPath, 'index.js'), updatedIndexContent);
             });
-        } else {
-            // If no packages are specified, write the index content without require statements
-            fs.writeFileSync(path.join(projectPath, 'index.js'), indexContent);
         }
     });
 }

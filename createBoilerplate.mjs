@@ -20,40 +20,40 @@ async function createBoilerplate(targetDir) {
         },
         {
             type: 'input',
-            name: 'rootFiles',
-            message: 'Enter the names of files to create in the root directory (comma separated):'
+            name: 'serverFiles',
+            message: 'Enter the names of files to create in the server directory (comma separated):'
         },
         {
             type: 'input',
-            name: 'dataFiles',
-            message: 'Enter the names of files to create in the data directory (comma separated):'
+            name: 'clientFiles',
+            message: 'Enter the names of files to create in the client directory (comma separated):'
         },
         {
             type: 'input',
             name: 'jsFiles',
-            message: 'Enter the names of files to create in the public/js directory (comma separated):'
+            message: 'Enter the names of files to create in the client/js directory (comma separated):'
         },
         {
             type: 'input',
             name: 'cssFiles',
-            message: 'Enter the names of files to create in the public/css directory (comma separated):'
+            message: 'Enter the names of files to create in the client/css directory (comma separated):'
         },
         {
             type: 'input',
             name: 'viewsFiles',
-            message: 'Enter the names of files to create in the views directory (comma separated):'
+            message: 'Enter the names of files to create in the server/views directory (comma separated):'
         },
         {
             type: 'input',
             name: 'partialsFiles',
-            message: 'Enter the names of files to create in the views/partials directory (comma separated):'
+            message: 'Enter the names of files to create in the server/views/partials directory (comma separated):'
         }
     ]);
 
     const projectName = answers.projectName;
     const npmPackages = answers.npmPackages.split(',').map(pkg => pkg.trim());
-    const rootFiles = answers.rootFiles.split(',').map(file => file.trim());
-    const dataFiles = answers.dataFiles.split(',').map(file => file.trim());
+    const serverFiles = answers.serverFiles.split(',').map(file => file.trim());
+    const clientFiles = answers.clientFiles.split(',').map(file => file.trim());
     const jsFiles = answers.jsFiles.split(',').map(file => file.trim());
     const cssFiles = answers.cssFiles.split(',').map(file => file.trim());
     const viewsFiles = answers.viewsFiles.split(',').map(file => file.trim());
@@ -64,18 +64,23 @@ async function createBoilerplate(targetDir) {
     // Create the main project directory
     fs.mkdirSync(projectPath, { recursive: true });
 
-    // Create subdirectories
-    const directories = ['data', 'public', 'public/js', 'public/css', 'views', 'views/partials'];
+    // Create subdirectories for client and server
+    const directories = [
+        'client',
+        'client/js',
+        'client/css',
+        'server',
+        'server/views',
+        'server/views/partials'
+    ];
     directories.forEach(dir => {
         fs.mkdirSync(path.join(projectPath, dir), { recursive: true });
     });
 
-    // Normalize and validate file names
-    const normalizeFiles = (files, extension, directory) => {
+    // Function to normalize and validate file names
+    const normalizeFiles = (files, extension) => {
         return files.map(file => {
-            // Ensure file has the correct extension
             if (!file.endsWith(extension)) {
-                // Correct the extension if it's placed in the wrong directory
                 if (extension === '.js' && file.endsWith('.css')) {
                     file = file.replace('.css', extension);
                 } else if (extension === '.css' && file.endsWith('.js')) {
@@ -88,40 +93,40 @@ async function createBoilerplate(targetDir) {
         });
     };
 
-    // Normalize and validate js and css files
     try {
-        const normalizedJsFiles = normalizeFiles(jsFiles, '.js', 'js');
-        const normalizedCssFiles = normalizeFiles(cssFiles, '.css', 'css');
+        // Normalize and validate js and css files
+        const normalizedJsFiles = normalizeFiles(jsFiles, '.js');
+        const normalizedCssFiles = normalizeFiles(cssFiles, '.css');
 
         // Create specified files in the respective directories
-        rootFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, file), fileContents[file] || '');
+        serverFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'server', file), fileContents[file] || '');
         });
-        dataFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'data', file), fileContents[file] || '');
+        clientFiles.forEach(file => {
+            if (file) fs.writeFileSync(path.join(projectPath, 'client', file), fileContents[file] || '');
         });
         normalizedJsFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'public/js', file), fileContents[`public/js/${file}`] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'client/js', file), fileContents[`client/js/${file}`] || '');
         });
         normalizedCssFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'public/css', file), fileContents[`public/css/${file}`] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'client/css', file), fileContents[`client/css/${file}`] || '');
         });
         viewsFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'views', file), fileContents[file] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'server/views', file), fileContents[file] || '');
         });
         partialsFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'views/partials', file), fileContents[`partials/${file}`] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'server/views/partials', file), fileContents[`partials/${file}`] || '');
         });
     } catch (error) {
         console.error(error.message);
         return;
     }
 
-    // Create index.js file in the root directory with content from JSON
-    fs.writeFileSync(path.join(projectPath, 'index.js'), fileContents['index.js']);
+    // Create index.js file in the server directory with content from JSON
+    fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), fileContents['index.js']);
 
-    // Change the current working directory to the project directory
-    process.chdir(projectPath);
+    // Change the current working directory to the server directory
+    process.chdir(path.join(projectPath, 'server'));
 
     // Initialize a new npm project and install packages
     exec('npm init -y', (initErr, initStdout, initStderr) => {
@@ -143,7 +148,7 @@ async function createBoilerplate(targetDir) {
                 const additionalPackages = npmPackages.filter(pkg => pkg !== 'express');
                 const requireStatements = additionalPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
                 const updatedIndexContent = requireStatements + '\n' + fileContents['index.js'];
-                fs.writeFileSync(path.join(projectPath, 'index.js'), updatedIndexContent);
+                fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), updatedIndexContent);
             });
         }
     });

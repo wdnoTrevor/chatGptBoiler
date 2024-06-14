@@ -122,8 +122,54 @@ async function createBoilerplate(targetDir) {
         return;
     }
 
-    // Create index.js file in the server directory with content from JSON
-    fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), fileContents['index.js']);
+    // Create index.js file in the server directory with additional required content
+    const indexJsContent = `
+const express = require('express');
+const path = require('path');
+const bodyParser = require('body-parser'); // Middleware to parse request body
+
+const app = express();
+
+// Middleware to serve static files from the client directory
+app.use(express.static(path.join(__dirname, '..', 'client', 'public')));
+
+// Set the view engine to EJS
+app.set('view engine', 'ejs');
+app.set('views', path.join(__dirname, 'views'));
+
+// Middleware to parse form data
+app.use(bodyParser.urlencoded({ extended: true }));
+
+app.get('/', (req, res) => {
+    res.render('index');
+});
+
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+    console.log(\`Server is running on port \${PORT}\`);
+});
+    `;
+    fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), indexJsContent.trim());
+
+    // Create package.json file in the server directory
+    const packageJsonContent = {
+        name: "server",
+        version: "1.0.0",
+        description: "Server for the project",
+        main: "index.js",
+        scripts: {
+            start: "node index.js",
+            dev: "nodemon index.js"
+        },
+        dependencies: {},
+        devDependencies: {
+            nodemon: "^2.0.12"
+        },
+        author: "",
+        license: "ISC"
+    };
+
+    fs.writeFileSync(path.join(projectPath, 'server', 'package.json'), JSON.stringify(packageJsonContent, null, 2));
 
     // Change the current working directory to the server directory
     process.chdir(path.join(projectPath, 'server'));
@@ -136,21 +182,21 @@ async function createBoilerplate(targetDir) {
         }
         console.log(initStdout);
 
-        if (npmPackages.length > 0) {
-            exec(`npm install ${npmPackages.join(' ')}`, (installErr, installStdout, installStderr) => {
-                if (installErr) {
-                    console.error(`Error installing npm packages: ${installErr}`);
-                    return;
-                }
-                console.log(installStdout);
+        // Include 'ejs' in npm packages to install
+        const allPackages = [...npmPackages, 'ejs'];
+        exec(`npm install ${allPackages.join(' ')} && npm install --save-dev nodemon`, (installErr, installStdout, installStderr) => {
+            if (installErr) {
+                console.error(`Error installing npm packages: ${installErr}`);
+                return;
+            }
+            console.log(installStdout);
 
-                // Add require statements for the installed packages in index.js
-                const additionalPackages = npmPackages.filter(pkg => pkg !== 'express');
-                const requireStatements = additionalPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
-                const updatedIndexContent = requireStatements + '\n' + fileContents['index.js'];
-                fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), updatedIndexContent);
-            });
-        }
+            // Add require statements for the installed packages in index.js
+            const additionalPackages = npmPackages.filter(pkg => pkg !== 'express');
+            const requireStatements = additionalPackages.map(pkg => `const ${pkg} = require('${pkg}');`).join('\n') + '\n';
+            const updatedIndexContent = requireStatements + '\n' + indexJsContent.trim();
+            fs.writeFileSync(path.join(projectPath, 'server', 'index.js'), updatedIndexContent);
+        });
     });
 }
 

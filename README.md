@@ -6,3 +6,9 @@ This is a repository that has boilerplate for a quicker wrk load
 2. join views and partials in startup
 3. js and css need to be in public folders
 4. Require path
+
+
+
+
+
+node /c/WebDev/chatGptBoiler/createBoilerplate.mjs

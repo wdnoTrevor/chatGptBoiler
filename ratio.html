@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspect Ratio Calculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .result {
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Aspect Ratio Calculator</h1>
+    <form id="aspect-ratio-form">
+        <label for="initial-width">Initial Width (px):</label>
+        <input type="number" id="initial-width" required>
+        <br><br>
+        <label for="initial-height">Initial Height (px):</label>
+        <input type="number" id="initial-height" required>
+        <br><br>
+        <button type="button" onclick="calculateAspectRatio()">Calculate Aspect Ratio</button>
+    </form>
+
+    <div class="result" id="aspect-ratio-result" style="display:none;">
+        <h2>Aspect Ratio</h2>
+        <p id="aspect-ratio-text"></p>
+        <h3>Calculate New Dimensions</h3>
+        <label for="new-width">New Width (px):</label>
+        <input type="number" id="new-width" oninput="updateHeight()" placeholder="Leave blank if entering height">
+        <br><br>
+        <label for="new-height">New Height (px):</label>
+        <input type="number" id="new-height" oninput="updateWidth()" placeholder="Leave blank if entering width">
+        <br><br>
+        <p id="new-dimensions-text"></p>
+    </div>
+
+    <script>
+        let aspectRatio;
+
+        function calculateAspectRatio() {
+            const width = document.getElementById('initial-width').value;
+            const height = document.getElementById('initial-height').value;
+
+            if (width > 0 && height > 0) {
+                aspectRatio = width / height;
+                document.getElementById('aspect-ratio-text').innerText = `Aspect Ratio: ${aspectRatio.toFixed(2)}:1`;
+                document.getElementById('aspect-ratio-result').style.display = 'block';
+            } else {
+                alert('Please enter valid positive numbers for width and height.');
+            }
+        }
+
+        function updateHeight() {
+            const newWidth = document.getElementById('new-width').value;
+            if (newWidth > 0) {
+                const newHeight = newWidth / aspectRatio;
+                document.getElementById('new-dimensions-text').innerText = `New Height: ${newHeight.toFixed(2)} px`;
+                document.getElementById('new-height').value = '';
+            }
+        }
+
+        function updateWidth() {
+            const newHeight = document.getElementById('new-height').value;
+            if (newHeight > 0) {
+                const newWidth = newHeight * aspectRatio;
+                document.getElementById('new-dimensions-text').innerText = `New Width: ${newWidth.toFixed(2)} px`;
+                document.getElementById('new-width').value = '';
+            }
+        }
+    </script>
+</body>
+</html>

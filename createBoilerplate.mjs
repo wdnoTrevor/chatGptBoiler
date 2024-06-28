@@ -6,6 +6,17 @@ import { exec } from 'child_process';
 import inquirer from 'inquirer';
 import fileContents from './data.json' assert { type: 'json' };
 
+// CSS content to be added to all generated CSS files
+const defaultCssContent = `
+h1 {
+    color: bisque;
+}
+
+body {
+    background-color: blueviolet;
+}
+`;
+
 async function createBoilerplate(targetDir) {
     const answers = await inquirer.prompt([
         {
@@ -146,7 +157,7 @@ async function createBoilerplate(targetDir) {
 </body>
 </html>`;
                 fs.writeFileSync(path.join(projectPath, 'server/views', file), viewContent);
-                fs.writeFileSync(path.join(projectPath, 'client/css', cssFileName), '');
+                fs.writeFileSync(path.join(projectPath, 'client/css', cssFileName), defaultCssContent);
                 fs.writeFileSync(path.join(projectPath, 'client/js', jsFileName), '');
                 return `app.get('/${fileNameWithoutExt}', (req, res) => {
     res.render('${fileNameWithoutExt}');

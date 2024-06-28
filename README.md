@@ -11,4 +11,3 @@ This is a repository that has boilerplate for a quicker wrk load
 
 
 
-node /c/WebDev/chatGptBoiler/createBoilerplate.mjs

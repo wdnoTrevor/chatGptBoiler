@@ -47,12 +47,12 @@ async function createBoilerplate(targetDir) {
         {
             type: 'input',
             name: 'jsFiles',
-            message: 'Enter the names of files to create in the client/js directory (comma separated):'
+            message: 'Enter the names of files to create in the client/public/js directory (comma separated):'
         },
         {
             type: 'input',
             name: 'cssFiles',
-            message: 'Enter the names of files to create in the client/css directory (comma separated):'
+            message: 'Enter the names of files to create in the client/public/css directory (comma separated):'
         },
         {
             type: 'input',
@@ -90,8 +90,9 @@ async function createBoilerplate(targetDir) {
     // Create subdirectories for client, server, and models
     const directories = [
         'client',
-        'client/js',
-        'client/css',
+        'client/public',
+        'client/public/js',
+        'client/public/css',
         'server',
         'server/views',
         'server/views/partials',
@@ -133,10 +134,10 @@ async function createBoilerplate(targetDir) {
             if (file) fs.writeFileSync(path.join(projectPath, 'client', file), fileContents[file] || '');
         });
         normalizedJsFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'client/js', file), fileContents[`client/js/${file}`] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'client/public/js', file), fileContents[`client/js/${file}`] || '');
         });
         normalizedCssFiles.forEach(file => {
-            if (file) fs.writeFileSync(path.join(projectPath, 'client/css', file), fileContents[`client/css/${file}`] || '');
+            if (file) fs.writeFileSync(path.join(projectPath, 'client/public/css', file), fileContents[`client/css/${file}`] || '');
         });
         const viewRoutes = viewsFiles.map(file => {
             if (file) {
@@ -157,8 +158,8 @@ async function createBoilerplate(targetDir) {
 </body>
 </html>`;
                 fs.writeFileSync(path.join(projectPath, 'server/views', file), viewContent);
-                fs.writeFileSync(path.join(projectPath, 'client/css', cssFileName), defaultCssContent);
-                fs.writeFileSync(path.join(projectPath, 'client/js', jsFileName), '');
+                fs.writeFileSync(path.join(projectPath, 'client/public/css', cssFileName), defaultCssContent);
+                fs.writeFileSync(path.join(projectPath, 'client/public/js', jsFileName), '');
                 return `app.get('/${fileNameWithoutExt}', (req, res) => {
     res.render('${fileNameWithoutExt}');
 });`;
@@ -186,33 +187,43 @@ module.exports = ${name};
 
         modelFiles.forEach(file => {
             if (file) {
-                const modelName = capitalize(path.basename(file, '.js'));
-                fs.writeFileSync(path.join(projectPath, 'models', file), modelTemplate(modelName));
+                const modelName = path.basename(file, '.js');
+                fs.writeFileSync(path.join(projectPath, 'models', file), modelTemplate(capitalize(modelName)));
             }
         });
 
-        // Generate require statements for models
-        const modelRequires = modelFiles.map(file => {
+        // Generate require statements and insertion code for models
+        const modelRequiresAndInsertion = modelFiles.map(file => {
             const modelName = capitalize(path.basename(file, '.js'));
-            return `const ${modelName} = require('../models/${file}');`;
+            return `
+const ${modelName} = require('../models/${modelName}');
+// const insert${modelName} = new ${modelName}({name: 'example'})
+// insert${modelName}.save()
+// .then(() => {
+//     console.log("you have yourself some data")
+// })
+// .catch((err) => {
+//     console.log(err)
+//     console.log("error big dawg")
+// })`;
         }).join('\n') + '\n';
 
-        // Base index.js content without express
+        // Base index.js content
         const baseIndexJsContent = `
-${modelRequires}
-
 const path = require('path');
 const bodyParser = require('body-parser'); // Middleware to parse request body
-const mongoose = require('mongoose'); // Import mongoose
 
-const app = require('express')(); // Assumes express is one of the installed packages
+
+const app = express();
+
+${modelRequiresAndInsertion}
 
 // Middleware to serve static files from the client directory
-app.use(require('express').static(path.join(__dirname, '..', 'client', 'public')));
+app.use(express.static(path.join(__dirname, '..', 'client', 'public')));
 
 // Set the view engine to EJS
 app.set('view engine', 'ejs');
-app.set('views', path.join(__dirname, 'views'));
+app.set('views', path.join(__dirname, '/views'));
 
 // Middleware to parse form data
 app.use(bodyParser.urlencoded({ extended: true }));

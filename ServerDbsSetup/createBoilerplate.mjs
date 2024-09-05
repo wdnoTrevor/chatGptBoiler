@@ -17,6 +17,9 @@ body {
 }
 `;
 
+// Function to capitalize model names
+const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
+
 async function createBoilerplate(targetDir) {
     const answers = await inquirer.prompt([
         {
@@ -118,9 +121,6 @@ async function createBoilerplate(targetDir) {
         });
     };
 
-    // Function to capitalize model names
-    const capitalize = str => str.charAt(0).toUpperCase() + str.slice(1);
-
     try {
         // Normalize and validate js and css files
         const normalizedJsFiles = normalizeFiles(jsFiles, '.js');
@@ -188,17 +188,18 @@ module.exports = ${name};
         modelFiles.forEach(file => {
             if (file) {
                 const modelName = path.basename(file, '.js');
-                fs.writeFileSync(path.join(projectPath, 'models', file), modelTemplate(capitalize(modelName)));
+                fs.writeFileSync(path.join(projectPath, 'models', file), modelTemplate(modelName));
             }
         });
 
         // Generate require statements and insertion code for models
         const modelRequiresAndInsertion = modelFiles.map(file => {
-            const modelName = capitalize(path.basename(file, '.js'));
+            const modelName = path.basename(file, '.js');
+            const capitalizedModelName = capitalize(modelName);
             return `
 const ${modelName} = require('../models/${modelName}');
-// const insert${modelName} = new ${modelName}({name: 'example'})
-// insert${modelName}.save()
+// const insert${capitalizedModelName} = new ${capitalizedModelName}({name: 'example'})
+// insert${capitalizedModelName}.save()
 // .then(() => {
 //     console.log("you have yourself some data")
 // })
@@ -212,7 +213,6 @@ const ${modelName} = require('../models/${modelName}');
         const baseIndexJsContent = `
 const path = require('path');
 const bodyParser = require('body-parser'); // Middleware to parse request body
-
 
 const app = express();
 
